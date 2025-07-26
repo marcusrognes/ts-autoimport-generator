@@ -12,7 +12,7 @@
     "test:watch": "tsx src/index.ts watch --prefix ../ --pattern ./example/**/*.glob.ts --output ./example/imports.generated.ts",
     "dev": "tsx watch src/index.ts --prefix ../ --pattern ./example/**/*.glob.ts --output ./example/imports.generated.ts"
   },
-  "author": "Marcus Rognes",
+  "author": "Marcus Rognes <marcus@rognes.guru>",
   "license": "ISC",
   "dependencies": {
     "@types/node": "^24.1.0",
