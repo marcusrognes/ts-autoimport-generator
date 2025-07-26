@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "tsx src/index.ts --prefix ../ --pattern ./example/**/*.glob.ts --output ./example/imports.generated.ts",
+    "test": "tsx src/index.ts --stripExtension --prefix ../ --pattern ./example/**/*.glob.ts --output ./example/imports.generated.ts",
     "test:watch": "tsx src/index.ts watch --prefix ../ --pattern ./example/**/*.glob.ts --output ./example/imports.generated.ts",
     "dev": "tsx watch src/index.ts --prefix ../ --pattern ./example/**/*.glob.ts --output ./example/imports.generated.ts"
   },

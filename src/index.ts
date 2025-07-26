@@ -8,6 +8,8 @@ import watch from 'glob-watcher';
 
 const argv = yargs(process.argv.slice(2)).parseSync();
 
+const stripExtension = argv.stripExtension;
+
 const pattern = argv.pattern as string;
 const prefix = argv.prefix ?? "./" as string;
 const output = argv.output as string;
@@ -27,7 +29,16 @@ async function processFiles() {
     const pathList = f.split(path.sep);
     const fileName = f.split(path.sep).pop() ?? "";
     const safeName = getSafeName(fileName);
-    fileContents += `import * as ${safeName} from '${prefix}${pathList.join("/")}';\n`;
+
+    let importPath = `${prefix}${pathList.join("/")}`;
+
+    if (stripExtension) {
+      const importPathList = importPath.split('.');
+      importPathList.pop();
+      importPath = importPathList.join('.');
+    }
+
+    fileContents += `import * as ${safeName} from '${importPath}';\n`;
     fileExport += `...${safeName},`;
   });
 
