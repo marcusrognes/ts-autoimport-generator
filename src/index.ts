@@ -38,6 +38,11 @@ async function processFiles() {
 }
 
 async function main() {
+  if (!pattern || !output) {
+    console.log("Missing --pattern or --ouput");
+    return;
+  }
+
   await processFiles();
 
   if (command === "watch") {
