@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Generates a file with imports based on globs",
   "main": "dist/index.js",
+  "files": ["dist"],
   "bin": {
     "tsag": "dist/index.js"
   },
@@ -19,7 +20,6 @@
 		"url": "git+https://github.com/marcusrognes/ts-autoimport-generator.git"
 	},
   "dependencies": {
-    "@types/node": "^24.1.0",
     "glob": "^11.0.3",
     "glob-watcher": "^6.0.0",
     "tsx": "^4.20.3",
@@ -27,6 +27,7 @@
     "yargs": "^18.0.0"
   },
   "devDependencies": {
+    "@types/node": "^24.1.0",
     "@types/glob-watcher": "^5.0.5",
     "@types/yargs": "^17.0.33"
   }
