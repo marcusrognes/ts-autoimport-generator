@@ -14,6 +14,10 @@
   },
   "author": "Marcus Rognes <marcus@rognes.guru>",
   "license": "ISC",
+  "repository": {
+		"type": "git",
+		"url": "git+https://github.com/marcusrognes/ts-autoimport-generator.git"
+	},
   "dependencies": {
     "@types/node": "^24.1.0",
     "glob": "^11.0.3",
