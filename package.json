@@ -1,0 +1,26 @@
+{
+  "name": "ts-autoimport-generator",
+  "version": "0.0.1",
+  "description": "Generates a file with imports based on globs",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "tsx src/index.ts --prefix ../ --pattern ./example/**/*.glob.ts --output ./example/imports.generated.ts",
+    "test:watch": "tsx src/index.ts watch --prefix ../ --pattern ./example/**/*.glob.ts --output ./example/imports.generated.ts",
+    "dev": "tsx watch src/index.ts --prefix ../ --pattern ./example/**/*.glob.ts --output ./example/imports.generated.ts"
+  },
+  "author": "Marcus Rognes",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^24.1.0",
+    "glob": "^11.0.3",
+    "glob-watcher": "^6.0.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "yargs": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/glob-watcher": "^5.0.5",
+    "@types/yargs": "^17.0.33"
+  }
+}
