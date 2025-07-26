@@ -2,7 +2,10 @@
   "name": "ts-autoimport-generator",
   "version": "0.0.1",
   "description": "Generates a file with imports based on globs",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "bin": {
+    "tsag": "dist/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "test": "tsx src/index.ts --prefix ../ --pattern ./example/**/*.glob.ts --output ./example/imports.generated.ts",
