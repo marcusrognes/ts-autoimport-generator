@@ -25,6 +25,8 @@ async function processFiles() {
   let fileContents = `/* GENERATED FILE, do not edit! */\n\n`;
   let fileExport = `export const collected = {`;
 
+  files.sort();
+
   files.forEach(f => {
     const pathList = f.split(path.sep);
     const fileName = f.split(path.sep).pop() ?? "";
