@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import path from "path";
 import fs from "fs/promises";
 import yargs from "yargs";
 import { glob } from "glob";
@@ -14,6 +13,8 @@ import {
   serializeTree,
   stripExtension,
 } from "./utils/tree";
+
+export { Config, FileConfig };
 
 const argv = yargs(process.argv.slice(2)).parseSync();
 
@@ -98,11 +99,14 @@ async function main() {
 
   const files = Object.keys(config.files);
 
+  console.log("TSAG: Building files");
   for (const filePath of files) {
     await processFileConfig(filePath, config.files[filePath]);
   }
+  console.log("TSAG: Done building files");
 
   if (command === "watch") {
+    console.log("TSAG: Watching files");
     for (const filePath of files) {
       watchFileConfig(filePath, config.files[filePath]);
     }

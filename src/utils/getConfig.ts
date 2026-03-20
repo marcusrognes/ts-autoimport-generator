@@ -12,9 +12,15 @@ export type Config = {
 
 export async function getConfig(dir: string): Promise<Config> {
   const configPath = path.resolve(dir, "tsag.ts");
-  const configUrl = pathToFileURL(configPath).href;
 
-  const file = await import(configUrl);
+  let file: any = {};
+
+  try {
+    file = await import(configPath);
+  } catch (error) {
+    console.error(error);
+    throw new Error("Missing config file tsag.ts");
+  }
 
   if (!file?.config) {
     throw new Error("Missing or invalid tsag.ts config");

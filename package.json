@@ -1,7 +1,7 @@
 {
   "name": "ts-autoimport-generator",
-  "version": "0.0.3",
-  "description": "Generates a file with imports based on globs",
+  "version": "1.0.0",
+  "description": "Generate files with imports based on globs",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -12,8 +12,8 @@
   "scripts": {
     "build": "tsc",
     "test": "ts-node src/index.ts --stripExtension",
-    "test:watch": "tsx src/index.ts watch",
-    "dev": "tsx watch src/index.ts"
+    "test:watch": "ts-node src/index.ts",
+    "dev": "ts-node src/index.ts watch"
   },
   "author": "Marcus Rognes <marcus@rognes.guru>",
   "license": "ISC",
