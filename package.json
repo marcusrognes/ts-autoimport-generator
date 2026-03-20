@@ -1,6 +1,6 @@
 {
   "name": "ts-autoimport-generator",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Generate files with imports based on globs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -52,7 +52,7 @@ export function serializeTree(node: TreeNode, indentSize: number): string {
   return Object.entries(node)
     .map(([key, value]) => {
       if (typeof value === "string") {
-        return `${indent}${key}: { ...${value} },`;
+        return `${indent}...${value},`;
       }
       return `${indent}${key}: {\n${serializeTree(value, indentSize + 2)}\n${indent}},`;
     })
