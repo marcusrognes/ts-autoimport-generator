@@ -7,33 +7,30 @@ import { glob } from "glob";
 import watch from "glob-watcher";
 import { getSafeName } from "./utils/getSafeName";
 import { Config, FileConfig, getConfig } from "./utils/getConfig";
+import {
+  TreeNode,
+  getRootSegments,
+  insertIntoTree,
+  serializeTree,
+  stripExtension,
+} from "./utils/tree";
 
 const argv = yargs(process.argv.slice(2)).parseSync();
 
-const stripExtension = argv.stripExtension;
+const shouldStripExtension = argv.stripExtension;
 
 const prefix = argv.prefix ?? ("./" as string);
 const [command] = argv._;
 
-function getSharedSegments(files: string[]): string[] {
-  if (files.length === 0) return [];
-  const split = files.map((f) => f.split("/"));
-  const first = split[0];
-  let i = 0;
-  while (i < first.length - 1 && split.every((segs) => segs[i] === first[i])) {
-    i++;
-  }
-  return first.slice(0, i);
-}
-
 async function processFileConfig(fileName: string, fileConfig: FileConfig) {
   const files = await glob(fileConfig.patterns, { posix: true });
   files.sort();
-  const sharedSegments = getSharedSegments(files);
+  const sharedSegments = getRootSegments(fileConfig.patterns);
   let fileContents = `/* GENERATED FILE, do not edit! */\n\n`;
-  let fileExport = `export const ${fileConfig.exportName || "collected"} = {`;
+  const exportName = fileConfig.exportName || "collected";
 
   if (!fileConfig.tree) {
+    let fileExport = `export const ${exportName} = {`;
     files.forEach((f) => {
       const segments = f.split("/").slice(sharedSegments.length);
       const fileName = segments[segments.length - 1] ?? "";
@@ -41,7 +38,7 @@ async function processFileConfig(fileName: string, fileConfig: FileConfig) {
 
       let importPath = `${prefix}${segments.join("/")}`;
 
-      if (stripExtension) {
+      if (shouldStripExtension) {
         const importPathList = importPath.split(".");
         importPathList.pop();
         importPath = importPathList.join(".");
@@ -50,11 +47,34 @@ async function processFileConfig(fileName: string, fileConfig: FileConfig) {
       fileContents += `import * as ${safeName} from '${importPath}';\n`;
       fileExport += `...${safeName},`;
     });
+    fileExport += `};`;
+    fileContents += `\n\n${fileExport}\n`;
   } else {
-  }
+    const outputDir = fileName.replace(/^\.\//, "").split("/").slice(0, -1);
+    const extraStrip = outputDir.slice(sharedSegments.length);
 
-  fileExport += `};`;
-  fileContents += `\n\n${fileExport}\n`;
+    const tree: TreeNode = {};
+    files.forEach((f) => {
+      const segments = f.split("/").slice(sharedSegments.length);
+      const fileSegment = segments[segments.length - 1] ?? "";
+      const safeName = getSafeName(fileSegment);
+
+      const relativeSegments = segments.slice(extraStrip.length);
+      let importPath = `${prefix}${relativeSegments.join("/")}`;
+      if (shouldStripExtension) {
+        importPath = stripExtension(importPath);
+      }
+
+      fileContents += `import * as ${safeName} from '${importPath}';\n`;
+
+      const keyPath = relativeSegments.map((s, i) =>
+        i === relativeSegments.length - 1 ? s.split(".")[0] : s,
+      );
+      insertIntoTree(tree, keyPath, safeName);
+    });
+    const fileExport = `export const ${exportName} = {\n${serializeTree(tree, 2)}\n};`;
+    fileContents += `\n\n${fileExport}\n`;
+  }
 
   await fs.writeFile(fileName, fileContents, { encoding: "utf-8" });
 }
