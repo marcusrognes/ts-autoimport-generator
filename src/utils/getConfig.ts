@@ -7,6 +7,7 @@ export type FileConfig = {
   patterns: string[];
 };
 export type Config = {
+  stripExtensions?: boolean;
   files: { [file: string]: FileConfig };
 };
 

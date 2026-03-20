@@ -11,7 +11,6 @@ import {
   getRootSegments,
   insertIntoTree,
   serializeTree,
-  stripExtension,
   stripSourceExtension,
 } from "./utils/tree";
 
@@ -19,11 +18,13 @@ export { Config, FileConfig };
 
 const argv = yargs(process.argv.slice(2)).parseSync();
 
-const shouldStripExtension = argv.stripExtension;
-
 const [command] = argv._;
 
-async function processFileConfig(fileName: string, fileConfig: FileConfig) {
+async function processFileConfig(
+  fileName: string,
+  fileConfig: FileConfig,
+  stripExtensions: boolean,
+) {
   const files = await glob(fileConfig.patterns, { posix: true });
   files.sort();
   const sharedSegments = getRootSegments(fileConfig.patterns);
@@ -37,13 +38,10 @@ async function processFileConfig(fileName: string, fileConfig: FileConfig) {
       const segments = normalized.split("/").slice(sharedSegments.length);
       const safeName = getSafeName(segments.join("/"));
 
-      let importPath = stripSourceExtension(
-        `${fileConfig.prefix || "./"}${segments.join("/")}`,
-      );
-
-      if (shouldStripExtension) {
-        importPath = stripExtension(importPath);
-      }
+      const rawPath = `${fileConfig.prefix || "./"}${segments.join("/")}`;
+      const importPath = stripExtensions
+        ? stripSourceExtension(rawPath)
+        : rawPath;
 
       fileContents += `import * as ${safeName} from '${importPath}';\n`;
       fileExport += `...${safeName},`;
@@ -61,12 +59,10 @@ async function processFileConfig(fileName: string, fileConfig: FileConfig) {
       const safeName = getSafeName(segments.join("/"));
 
       const relativeSegments = segments.slice(extraStrip.length);
-      let importPath = stripSourceExtension(
-        `${fileConfig.prefix || "./"}${relativeSegments.join("/")}`,
-      );
-      if (shouldStripExtension) {
-        importPath = stripExtension(importPath);
-      }
+      const rawPath = `${fileConfig.prefix || "./"}${relativeSegments.join("/")}`;
+      const importPath = stripExtensions
+        ? stripSourceExtension(rawPath)
+        : rawPath;
 
       fileContents += `import * as ${safeName} from '${importPath}';\n`;
 
@@ -82,17 +78,21 @@ async function processFileConfig(fileName: string, fileConfig: FileConfig) {
   await fs.writeFile(fileName, fileContents, { encoding: "utf-8" });
 }
 
-function watchFileConfig(fileName: string, fileConfig: FileConfig) {
+function watchFileConfig(
+  fileName: string,
+  fileConfig: FileConfig,
+  stripExtensions: boolean,
+) {
   const watcher = watch(fileConfig.patterns);
 
   watcher.on("add", async () => {
     console.log("File added\n");
-    await processFileConfig(fileName, fileConfig);
+    await processFileConfig(fileName, fileConfig, stripExtensions);
   });
 
   watcher.on("unlink", async () => {
     console.log("File removed\n");
-    await processFileConfig(fileName, fileConfig);
+    await processFileConfig(fileName, fileConfig, stripExtensions);
   });
 }
 
@@ -101,16 +101,18 @@ async function main() {
 
   const files = Object.keys(config.files);
 
+  const stripExtensions = config.stripExtensions ?? false;
+
   console.log("TSAG: Building files\n");
   for (const filePath of files) {
-    await processFileConfig(filePath, config.files[filePath]);
+    await processFileConfig(filePath, config.files[filePath], stripExtensions);
   }
   console.log("TSAG: Done building files\n");
 
   if (command === "watch") {
     console.log("TSAG: Watching files\n");
     for (const filePath of files) {
-      watchFileConfig(filePath, config.files[filePath]);
+      watchFileConfig(filePath, config.files[filePath], stripExtensions);
     }
   }
 }
