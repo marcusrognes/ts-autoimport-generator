@@ -1,5 +1,4 @@
 import path from "path";
-import { pathToFileURL } from "url";
 
 export type FileConfig = {
   tree?: boolean;
@@ -13,10 +12,13 @@ export type Config = {
 export async function getConfig(dir: string): Promise<Config> {
   const configPath = path.resolve(dir, "tsag.ts");
 
-  let file: any = {};
+  // Register tsx so .ts files can be loaded via require
+  require("tsx/cjs");
 
+  let file: any = {};
   try {
-    file = await import(configPath);
+    delete require.cache[require.resolve(configPath)];
+    file = require(configPath);
   } catch (error) {
     console.error(error);
     throw new Error("Missing config file tsag.ts");
