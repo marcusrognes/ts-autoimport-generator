@@ -1,77 +1,92 @@
 #!/usr/bin/env node
 
-import path from 'path';
-import fs from 'fs/promises';
-import yargs from 'yargs';
-import { glob } from 'glob';
-import watch from 'glob-watcher';
+import path from "path";
+import fs from "fs/promises";
+import yargs from "yargs";
+import { glob } from "glob";
+import watch from "glob-watcher";
+import { getSafeName } from "./utils/getSafeName";
+import { Config, FileConfig, getConfig } from "./utils/getConfig";
 
 const argv = yargs(process.argv.slice(2)).parseSync();
 
 const stripExtension = argv.stripExtension;
 
-const pattern = argv.pattern as string;
-const prefix = argv.prefix ?? "./" as string;
-const output = argv.output as string;
+const prefix = argv.prefix ?? ("./" as string);
 const [command] = argv._;
 
-function getSafeName(name: string): string {
-  return name.replace(/\./g, "_").replace(new RegExp(`g\${path.delimiter}/g`), "_");
+function getSharedSegments(files: string[]): string[] {
+  if (files.length === 0) return [];
+  const split = files.map((f) => f.split("/"));
+  const first = split[0];
+  let i = 0;
+  while (i < first.length - 1 && split.every((segs) => segs[i] === first[i])) {
+    i++;
+  }
+  return first.slice(0, i);
 }
 
-async function processFiles() {
-  const files = await glob(pattern);
-
-  let fileContents = `/* GENERATED FILE, do not edit! */\n\n`;
-  let fileExport = `export const collected = {`;
-
+async function processFileConfig(fileName: string, fileConfig: FileConfig) {
+  const files = await glob(fileConfig.patterns, { posix: true });
   files.sort();
+  const sharedSegments = getSharedSegments(files);
+  let fileContents = `/* GENERATED FILE, do not edit! */\n\n`;
+  let fileExport = `export const ${fileConfig.exportName || "collected"} = {`;
 
-  files.forEach(f => {
-    const pathList = f.split(path.sep);
-    const fileName = f.split(path.sep).pop() ?? "";
-    const safeName = getSafeName(fileName);
+  if (!fileConfig.tree) {
+    files.forEach((f) => {
+      const segments = f.split("/").slice(sharedSegments.length);
+      const fileName = segments[segments.length - 1] ?? "";
+      const safeName = getSafeName(fileName);
 
-    let importPath = `${prefix}${pathList.join("/")}`;
+      let importPath = `${prefix}${segments.join("/")}`;
 
-    if (stripExtension) {
-      const importPathList = importPath.split('.');
-      importPathList.pop();
-      importPath = importPathList.join('.');
-    }
+      if (stripExtension) {
+        const importPathList = importPath.split(".");
+        importPathList.pop();
+        importPath = importPathList.join(".");
+      }
 
-    fileContents += `import * as ${safeName} from '${importPath}';\n`;
-    fileExport += `...${safeName},`;
-  });
+      fileContents += `import * as ${safeName} from '${importPath}';\n`;
+      fileExport += `...${safeName},`;
+    });
+  } else {
+  }
 
   fileExport += `};`;
   fileContents += `\n\n${fileExport}\n`;
 
-  await fs.writeFile(output, fileContents, { encoding: 'utf-8' });
+  await fs.writeFile(fileName, fileContents, { encoding: "utf-8" });
+}
+
+function watchFileConfig(fileName: string, fileConfig: FileConfig) {
+  const watcher = watch(fileConfig.patterns);
+
+  watcher.on("add", async () => {
+    console.log("File added\n");
+    await processFileConfig(fileName, fileConfig);
+  });
+
+  watcher.on("unlink", async () => {
+    console.log("File removed\n");
+    await processFileConfig(fileName, fileConfig);
+  });
 }
 
 async function main() {
-  if (!pattern || !output) {
-    console.log("Missing --pattern or --ouput");
-    return;
+  const config = await getConfig(process.cwd());
+
+  const files = Object.keys(config.files);
+
+  for (const filePath of files) {
+    await processFileConfig(filePath, config.files[filePath]);
   }
 
-  await processFiles();
-
   if (command === "watch") {
-    const watcher = watch(pattern);
-
-    watcher.on("add", async () => {
-      console.log("File added\n");
-      await processFiles();
-    });
-
-    watcher.on("unlink", async () => {
-      console.log("File removed\n");
-      await processFiles();
-    });
+    for (const filePath of files) {
+      watchFileConfig(filePath, config.files[filePath]);
+    }
   }
 }
 
 main();
-

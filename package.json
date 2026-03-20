@@ -3,32 +3,35 @@
   "version": "0.0.3",
   "description": "Generates a file with imports based on globs",
   "main": "dist/index.js",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "bin": {
-    "tsag": "dist/index.js"
+    "tsag": "src/index.js"
   },
   "scripts": {
     "build": "tsc",
-    "test": "tsx src/index.ts --stripExtension --prefix ../ --pattern ./example/**/*.glob.ts --output ./example/imports.generated.ts",
-    "test:watch": "tsx src/index.ts watch --prefix ../ --pattern ./example/**/*.glob.ts --output ./example/imports.generated.ts",
-    "dev": "tsx watch src/index.ts --prefix ../ --pattern ./example/**/*.glob.ts --output ./example/imports.generated.ts"
+    "test": "ts-node src/index.ts --stripExtension",
+    "test:watch": "tsx src/index.ts watch",
+    "dev": "tsx watch src/index.ts"
   },
   "author": "Marcus Rognes <marcus@rognes.guru>",
   "license": "ISC",
   "repository": {
-		"type": "git",
-		"url": "git+https://github.com/marcusrognes/ts-autoimport-generator.git"
-	},
+    "type": "git",
+    "url": "git+https://github.com/marcusrognes/ts-autoimport-generator.git"
+  },
   "dependencies": {
     "glob": "^11.0.3",
     "glob-watcher": "^6.0.0",
+    "ts-node": "^10.9.2",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "yargs": "^18.0.0"
   },
   "devDependencies": {
-    "@types/node": "^24.1.0",
     "@types/glob-watcher": "^5.0.5",
+    "@types/node": "^24.1.0",
     "@types/yargs": "^17.0.33"
   }
 }
