@@ -1,10 +1,11 @@
 {
   "name": "ts-autoimport-generator",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Generate files with imports based on globs",
   "main": "dist/index.js",
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "bin": {
     "tsag": "src/index.js"
