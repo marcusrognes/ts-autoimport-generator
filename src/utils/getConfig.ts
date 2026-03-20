@@ -3,6 +3,7 @@ import path from "path";
 export type FileConfig = {
   tree?: boolean;
   exportName?: string;
+  prefix?: string;
   patterns: string[];
 };
 export type Config = {

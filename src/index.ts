@@ -12,6 +12,7 @@ import {
   insertIntoTree,
   serializeTree,
   stripExtension,
+  stripSourceExtension,
 } from "./utils/tree";
 
 export { Config, FileConfig };
@@ -20,7 +21,6 @@ const argv = yargs(process.argv.slice(2)).parseSync();
 
 const shouldStripExtension = argv.stripExtension;
 
-const prefix = argv.prefix ?? ("./" as string);
 const [command] = argv._;
 
 async function processFileConfig(fileName: string, fileConfig: FileConfig) {
@@ -33,16 +33,16 @@ async function processFileConfig(fileName: string, fileConfig: FileConfig) {
   if (!fileConfig.tree) {
     let fileExport = `export const ${exportName} = {`;
     files.forEach((f) => {
-      const segments = f.split("/").slice(sharedSegments.length);
-      const fileName = segments[segments.length - 1] ?? "";
-      const safeName = getSafeName(fileName);
+      const normalized = f.startsWith("./") ? f.slice(2) : f;
+      const segments = normalized.split("/").slice(sharedSegments.length);
+      const safeName = getSafeName(segments.join("/"));
 
-      let importPath = `${prefix}${segments.join("/")}`;
+      let importPath = stripSourceExtension(
+        `${fileConfig.prefix || "./"}${segments.join("/")}`,
+      );
 
       if (shouldStripExtension) {
-        const importPathList = importPath.split(".");
-        importPathList.pop();
-        importPath = importPathList.join(".");
+        importPath = stripExtension(importPath);
       }
 
       fileContents += `import * as ${safeName} from '${importPath}';\n`;
@@ -56,12 +56,14 @@ async function processFileConfig(fileName: string, fileConfig: FileConfig) {
 
     const tree: TreeNode = {};
     files.forEach((f) => {
-      const segments = f.split("/").slice(sharedSegments.length);
-      const fileSegment = segments[segments.length - 1] ?? "";
-      const safeName = getSafeName(fileSegment);
+      const normalized = f.startsWith("./") ? f.slice(2) : f;
+      const segments = normalized.split("/").slice(sharedSegments.length);
+      const safeName = getSafeName(segments.join("/"));
 
       const relativeSegments = segments.slice(extraStrip.length);
-      let importPath = `${prefix}${relativeSegments.join("/")}`;
+      let importPath = stripSourceExtension(
+        `${fileConfig.prefix || "./"}${relativeSegments.join("/")}`,
+      );
       if (shouldStripExtension) {
         importPath = stripExtension(importPath);
       }
@@ -99,14 +101,14 @@ async function main() {
 
   const files = Object.keys(config.files);
 
-  console.log("TSAG: Building files");
+  console.log("TSAG: Building files\n");
   for (const filePath of files) {
     await processFileConfig(filePath, config.files[filePath]);
   }
-  console.log("TSAG: Done building files");
+  console.log("TSAG: Done building files\n");
 
   if (command === "watch") {
-    console.log("TSAG: Watching files");
+    console.log("TSAG: Watching files\n");
     for (const filePath of files) {
       watchFileConfig(filePath, config.files[filePath]);
     }
